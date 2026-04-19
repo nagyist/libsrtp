@@ -515,22 +515,35 @@ srtp_err_status_t srtp_policy_set_cryptex(srtp_policy_t policy,
                                           bool use_cryptex);
 
 /**
- * @brief Set encrypted header extension IDs.
+ * @brief Add an encrypted header extension ID.
  *
  * @param policy policy handle.
- * @param hdr_xtnd_ids pointer to extension ID array.
- * @param num_xtnd_ids number of IDs in hdr_xtnd_ids.
+ * @param hdr_xtnd_id header extension ID to encrypt.
  *
- * num_xtnd_ids must be <= SRTP_MAX_NUM_ENC_HDR_XTND_IDS.
- * When num_xtnd_ids is non-zero, hdr_xtnd_ids must reference that many bytes.
+ * Duplicate IDs are rejected.
+ * The number of configured IDs must be < SRTP_MAX_NUM_ENC_HDR_XTND_IDS.
  *
  * @return
- *    - srtp_err_status_ok if values were applied.
- *    - srtp_err_status_bad_param if policy is NULL or num_xtnd_ids is invalid.
+ *    - srtp_err_status_ok if ID was added.
+ *    - srtp_err_status_bad_param if policy is NULL, the ID already exists, or
+ *      the list is full.
  */
-srtp_err_status_t srtp_policy_set_enc_hdr_xtnd_ids(srtp_policy_t policy,
-                                                   const uint8_t *hdr_xtnd_ids,
-                                                   size_t num_xtnd_ids);
+srtp_err_status_t srtp_policy_add_enc_hdr_xtnd_id(srtp_policy_t policy,
+                                                  uint8_t hdr_xtnd_id);
+
+/**
+ * @brief Remove all encrypted header extension IDs from a policy.
+ *
+ * @param policy policy handle.
+ *
+ * This clears the configured encrypted header extension IDs and resets the
+ * count to zero.
+ *
+ * @return
+ *    - srtp_err_status_ok if IDs were removed.
+ *    - srtp_err_status_bad_param if policy is NULL.
+ */
+srtp_err_status_t srtp_policy_remove_enc_hdr_xtnd_ids(srtp_policy_t policy);
 
 /**
  * @brief Destroy a policy handle.

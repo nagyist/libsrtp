@@ -367,26 +367,37 @@ srtp_err_status_t srtp_policy_set_cryptex(srtp_policy_t policy,
     return srtp_err_status_ok;
 }
 
-srtp_err_status_t srtp_policy_set_enc_hdr_xtnd_ids(srtp_policy_t policy,
-                                                   const uint8_t *hdr_xtnd_ids,
-                                                   size_t num_xtnd_ids)
+srtp_err_status_t srtp_policy_add_enc_hdr_xtnd_id(srtp_policy_t policy,
+                                                  uint8_t hdr_xtnd_id)
 {
     if (policy == NULL) {
         return srtp_err_status_bad_param;
     }
 
-    if (num_xtnd_ids > SRTP_MAX_NUM_ENC_HDR_XTND_IDS) {
+    if (policy->enc_xtn_hdr_count >= SRTP_MAX_NUM_ENC_HDR_XTND_IDS) {
         return srtp_err_status_bad_param;
     }
 
-    if (num_xtnd_ids > 0 && hdr_xtnd_ids == NULL) {
+    for (size_t i = 0; i < policy->enc_xtn_hdr_count; i++) {
+        if (policy->enc_xtn_hdr[i] == hdr_xtnd_id) {
+            return srtp_err_status_bad_param;
+        }
+    }
+
+    policy->enc_xtn_hdr[policy->enc_xtn_hdr_count] = hdr_xtnd_id;
+    policy->enc_xtn_hdr_count++;
+
+    return srtp_err_status_ok;
+}
+
+srtp_err_status_t srtp_policy_remove_enc_hdr_xtnd_ids(srtp_policy_t policy)
+{
+    if (policy == NULL) {
         return srtp_err_status_bad_param;
     }
 
-    if (num_xtnd_ids > 0) {
-        memcpy(policy->enc_xtn_hdr, hdr_xtnd_ids, num_xtnd_ids);
-    }
-    policy->enc_xtn_hdr_count = num_xtnd_ids;
+    octet_string_set_to_zero(policy->enc_xtn_hdr, sizeof(policy->enc_xtn_hdr));
+    policy->enc_xtn_hdr_count = 0;
 
     return srtp_err_status_ok;
 }

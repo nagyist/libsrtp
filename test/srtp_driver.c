@@ -1397,7 +1397,7 @@ srtp_err_status_t srtp_test(const test_policy_t *policy,
     CHECK_OK(policy_from_test_policy(&send_policy, policy, use_mki));
 
     if (test_extension_headers) {
-        CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(send_policy, &header, 1));
+        CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(send_policy, header));
     }
 
     CHECK_OK(srtp_create(&srtp_sender, send_policy));
@@ -1586,8 +1586,7 @@ srtp_err_status_t srtp_test_io_lengths(const test_policy_t *policy,
     CHECK_OK(policy_from_test_policy(&send_policy, policy, use_mki));
 
     if (test_extension_headers) {
-        CHECK_OK(
-            srtp_policy_set_enc_hdr_xtnd_ids(send_policy, &xtn_header_id, 1));
+        CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(send_policy, xtn_header_id));
         rtp_header_len += sizeof(rtp_test_packet_extension_header);
     }
 
@@ -3932,8 +3931,9 @@ srtp_err_status_t srtp_validate_encrypted_extensions_headers(void)
     CHECK_OK(srtp_policy_set_ssrc(policy,
                                   (srtp_ssrc_t){ ssrc_specific, 0xcafebabe }));
     CHECK_OK(policy_set_key(policy, test_key_ext_headers));
-    CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(
-        policy, headers, sizeof(headers) / sizeof(headers[0])));
+    for (size_t i = 0; i < sizeof(headers) / sizeof(headers[0]); i++) {
+        CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(policy, headers[i]));
+    }
 
     status = srtp_create(&srtp_snd, policy);
     if (status) {
@@ -4058,8 +4058,9 @@ srtp_err_status_t srtp_validate_encrypted_extensions_headers_gcm(void)
     CHECK_OK(srtp_policy_set_ssrc(policy,
                                   (srtp_ssrc_t){ ssrc_specific, 0xcafebabe }));
     CHECK_OK(policy_set_key(policy, test_key_ext_headers));
-    CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(
-        policy, headers, sizeof(headers) / sizeof(headers[0])));
+    for (size_t i = 0; i < sizeof(headers) / sizeof(headers[0]); i++) {
+        CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(policy, headers[i]));
+    }
 
     status = srtp_create(&srtp_snd, policy);
     if (status) {

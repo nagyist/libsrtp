@@ -442,28 +442,34 @@ static void srtp_policy_cryptex_and_enc_hdr_xtnd_ids_invalid(void)
 
     create_valid_policy(&policy);
     CHECK_OK(srtp_policy_set_cryptex(policy, true));
-    CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(policy, &hdr_id, 1));
+    CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(policy, hdr_id));
     CHECK_RETURN(srtp_policy_validate(policy), srtp_err_status_bad_param);
 
     srtp_policy_destroy(policy);
 }
 
-static void srtp_policy_set_enc_hdr_xtnd_ids_boundaries(void)
+static void srtp_policy_enc_hdr_xtnd_ids_add_remove_boundaries(void)
 {
     srtp_policy_t policy;
-    uint8_t hdr_ids[SRTP_MAX_NUM_ENC_HDR_XTND_IDS] = { 0 };
+    uint8_t hdr_id = 0;
+    uint8_t duplicate_id = 3;
 
     create_valid_policy(&policy);
 
-    CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(policy, hdr_ids, 0));
-    CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(policy, NULL, 0));
-    CHECK_RETURN(srtp_policy_set_enc_hdr_xtnd_ids(policy, NULL, 1),
+    for (size_t i = 0; i < SRTP_MAX_NUM_ENC_HDR_XTND_IDS; i++) {
+        hdr_id = (uint8_t)i;
+        CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(policy, hdr_id));
+    }
+    CHECK_RETURN(srtp_policy_add_enc_hdr_xtnd_id(policy, hdr_id),
                  srtp_err_status_bad_param);
-    CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(policy, hdr_ids,
-                                              SRTP_MAX_NUM_ENC_HDR_XTND_IDS));
-    CHECK_RETURN(srtp_policy_set_enc_hdr_xtnd_ids(
-                     policy, hdr_ids, SRTP_MAX_NUM_ENC_HDR_XTND_IDS + 1),
+
+    CHECK_OK(srtp_policy_remove_enc_hdr_xtnd_ids(policy));
+    CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(policy, duplicate_id));
+    CHECK_RETURN(srtp_policy_add_enc_hdr_xtnd_id(policy, duplicate_id),
                  srtp_err_status_bad_param);
+
+    CHECK_OK(srtp_policy_remove_enc_hdr_xtnd_ids(policy));
+    CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(policy, duplicate_id));
     CHECK_OK(srtp_policy_validate(policy));
     assert_policy_creates_session(policy);
 
@@ -518,7 +524,9 @@ static void srtp_policy_all_functions_null_policy(void)
                  srtp_err_status_bad_param);
     CHECK_RETURN(srtp_policy_set_cryptex(NULL, true),
                  srtp_err_status_bad_param);
-    CHECK_RETURN(srtp_policy_set_enc_hdr_xtnd_ids(NULL, &hdr_id, 1),
+    CHECK_RETURN(srtp_policy_add_enc_hdr_xtnd_id(NULL, hdr_id),
+                 srtp_err_status_bad_param);
+    CHECK_RETURN(srtp_policy_remove_enc_hdr_xtnd_ids(NULL),
                  srtp_err_status_bad_param);
 
     /* void API should be no-op on NULL */
@@ -564,8 +572,8 @@ TEST_LIST = {
       srtp_policy_set_cryptex_values_ok },
     { "srtp_policy_cryptex_and_enc_hdr_xtnd_ids_invalid()",
       srtp_policy_cryptex_and_enc_hdr_xtnd_ids_invalid },
-    { "srtp_policy_set_enc_hdr_xtnd_ids_boundaries()",
-      srtp_policy_set_enc_hdr_xtnd_ids_boundaries },
+    { "srtp_policy_enc_hdr_xtnd_ids_add_remove_boundaries()",
+      srtp_policy_enc_hdr_xtnd_ids_add_remove_boundaries },
     { "srtp_policy_all_functions_null_policy()",
       srtp_policy_all_functions_null_policy },
     { 0 }
