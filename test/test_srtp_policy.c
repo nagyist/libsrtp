@@ -435,6 +435,19 @@ static void srtp_policy_set_cryptex_values_ok(void)
     srtp_policy_destroy(policy);
 }
 
+static void srtp_policy_cryptex_and_enc_hdr_xtnd_ids_invalid(void)
+{
+    srtp_policy_t policy;
+    uint8_t hdr_id = 1;
+
+    create_valid_policy(&policy);
+    CHECK_OK(srtp_policy_set_cryptex(policy, true));
+    CHECK_OK(srtp_policy_set_enc_hdr_xtnd_ids(policy, &hdr_id, 1));
+    CHECK_RETURN(srtp_policy_validate(policy), srtp_err_status_bad_param);
+
+    srtp_policy_destroy(policy);
+}
+
 static void srtp_policy_set_enc_hdr_xtnd_ids_boundaries(void)
 {
     srtp_policy_t policy;
@@ -549,6 +562,8 @@ TEST_LIST = {
       srtp_policy_set_allow_repeat_tx_values_ok },
     { "srtp_policy_set_cryptex_values_ok()",
       srtp_policy_set_cryptex_values_ok },
+    { "srtp_policy_cryptex_and_enc_hdr_xtnd_ids_invalid()",
+      srtp_policy_cryptex_and_enc_hdr_xtnd_ids_invalid },
     { "srtp_policy_set_enc_hdr_xtnd_ids_boundaries()",
       srtp_policy_set_enc_hdr_xtnd_ids_boundaries },
     { "srtp_policy_all_functions_null_policy()",

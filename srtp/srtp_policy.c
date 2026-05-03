@@ -153,7 +153,10 @@ srtp_err_status_t srtp_policy_validate(srtp_policy_t policy)
         return srtp_err_status_bad_param;
     }
 
-    // TODO: cryptex and encrypted hdr extensions can not both be enabled
+    // Not a valid combination
+    if (policy->enc_xtn_hdr_count > 0 && policy->use_cryptex) {
+        return srtp_err_status_bad_param;
+    }
 
     return srtp_err_status_ok;
 }
@@ -217,9 +220,6 @@ srtp_err_status_t srtp_policy_set_sec_serv(srtp_policy_t policy,
         return srtp_err_status_bad_param;
     }
 
-    // TODO: currently requires profile to be set first, is that ok ? if not,
-    // how to handle ? it ges overwritten when profile is set, but that is not
-    // ideal
     if (policy->profile == srtp_profile_reserved) {
         return srtp_err_status_bad_param;
     }
