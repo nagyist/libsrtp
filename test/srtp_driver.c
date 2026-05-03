@@ -2236,13 +2236,12 @@ srtp_err_status_t srtp_session_print_policy(srtp_t srtp)
     return data.status;
 }
 
-srtp_err_status_t srtp_print_policy(const test_policy_t *policy)
+srtp_err_status_t srtp_print_policy(const test_policy_t * test_policy)
 {
-    (void)policy;
-    // TODO: fix
-#if 0
     srtp_err_status_t status;
+    srtp_policy_t policy;
     srtp_t session;
+    CHECK_OK(policy_from_test_policy(&policy, test_policy, false));
 
     status = srtp_create(&session, policy);
     if (status) {
@@ -2256,7 +2255,6 @@ srtp_err_status_t srtp_print_policy(const test_policy_t *policy)
     if (status) {
         return status;
     }
-#endif
     return srtp_err_status_ok;
 }
 
