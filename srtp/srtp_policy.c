@@ -41,6 +41,766 @@
 
 #include "alloc.h"
 
+/**
+ * @brief srtp_crypto_policy_set_rtp_default() sets a crypto policy
+ * structure to the SRTP default policy for RTP protection.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_rtp_default(&p) sets the
+ * srtp_crypto_policy_t at location p to the SRTP default policy for RTP
+ * protection, as defined in the specification.  This function is a
+ * convenience that helps to avoid dealing directly with the policy
+ * data structure.  You are encouraged to initialize policy elements
+ * with this function call.  Doing so may allow your code to be
+ * forward compatible with later versions of libSRTP that include more
+ * elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_rtp_default(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_rtcp_default() sets a crypto policy
+ * structure to the SRTP default policy for RTCP protection.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_rtcp_default(&p) sets the
+ * srtp_crypto_policy_t at location p to the SRTP default policy for RTCP
+ * protection, as defined in the specification.  This function is a
+ * convenience that helps to avoid dealing directly with the policy
+ * data structure.  You are encouraged to initialize policy elements
+ * with this function call.  Doing so may allow your code to be
+ * forward compatible with later versions of libSRTP that include more
+ * elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_rtcp_default(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80() sets a crypto
+ * policy structure to the SRTP default policy for RTP protection.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80() is a
+ * synonym for srtp_crypto_policy_set_rtp_default().  It conforms to the
+ * naming convention used in RFC 4568 (SDP Security Descriptions for
+ * Media Streams).
+ *
+ * @return void.
+ *
+ */
+#define srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(p)                      \
+    srtp_crypto_policy_set_rtp_default(p)
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32() sets a crypto
+ * policy structure to a short-authentication tag policy
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&p)
+ * sets the srtp_crypto_policy_t at location p to use policy
+ * AES_CM_128_HMAC_SHA1_32 as defined in RFC 4568.
+ * This policy uses AES-128
+ * Counter Mode encryption and HMAC-SHA1 authentication, with an
+ * authentication tag that is only 32 bits long.  This length is
+ * considered adequate only for protecting audio and video media that
+ * use a stateless playback function.  See Section 7.5 of RFC 3711
+ * (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This crypto policy is intended for use in SRTP, but not in
+ * SRTCP.  It is recommended that a policy that uses longer
+ * authentication tags be used for SRTCP.  See Section 7.5 of RFC 3711
+ * (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_128_null_auth() sets a crypto
+ * policy structure to an encryption-only policy
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_128_null_auth(&p) sets
+ * the srtp_crypto_policy_t at location p to use the SRTP default cipher
+ * (AES-128 Counter Mode), but to use no authentication method.  This
+ * policy is NOT RECOMMENDED unless it is unavoidable; see Section 7.5
+ * of RFC 3711 (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This policy is NOT RECOMMENDED for SRTP unless it is
+ * unavoidable, and it is NOT RECOMMENDED at all for SRTCP; see
+ * Section 7.5 of RFC 3711 (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_128_null_auth(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_null_cipher_hmac_sha1_80() sets a crypto
+ * policy structure to an authentication-only policy
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_null_cipher_hmac_sha1_80(&p)
+ * sets the srtp_crypto_policy_t at location p to use HMAC-SHA1 with an 80
+ * bit authentication tag to provide message authentication, but to
+ * use no encryption.  This policy is NOT RECOMMENDED for SRTP unless
+ * there is a requirement to forgo encryption.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This policy is NOT RECOMMENDED for SRTP unless there is a
+ * requirement to forgo encryption.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_null_cipher_hmac_sha1_80(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_null_cipher_hmac_null() sets a crypto
+ * policy structure to use no encryption or authentication.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_null_cipher_hmac_null(&p)
+ * sets the srtp_crypto_policy_t at location p to use no encryption and
+ * no authentication.  This policy should only be used for testing and
+ * troubleshooting.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This policy is NOT RECOMMENDED for SRTP unless there is a
+ * requirement to forgo encryption and authentication.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_null_cipher_hmac_null(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80() sets a crypto
+ * policy structure to a encryption and authentication policy using AES-256
+ * for RTP protection.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80(&p)
+ * sets the srtp_crypto_policy_t at location p to use policy
+ * AES_CM_256_HMAC_SHA1_80 as defined in RFC 6188.  This policy uses AES-256
+ * Counter Mode encryption and HMAC-SHA1 authentication, with an 80 bit
+ * authentication tag.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32() sets a crypto
+ * policy structure to a short-authentication tag policy using AES-256
+ * encryption.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32(&p)
+ * sets the srtp_crypto_policy_t at location p to use policy
+ * AES_CM_256_HMAC_SHA1_32 as defined in RFC 6188.  This policy uses AES-256
+ * Counter Mode encryption and HMAC-SHA1 authentication, with an
+ * authentication tag that is only 32 bits long.  This length is
+ * considered adequate only for protecting audio and video media that
+ * use a stateless playback function.  See Section 7.5 of RFC 3711
+ * (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This crypto policy is intended for use in SRTP, but not in
+ * SRTCP.  It is recommended that a policy that uses longer
+ * authentication tags be used for SRTCP.  See Section 7.5 of RFC 3711
+ * (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_256_null_auth() sets a crypto
+ * policy structure to an encryption-only policy
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_256_null_auth(&p) sets
+ * the srtp_crypto_policy_t at location p to use the SRTP default cipher
+ * (AES-256 Counter Mode), but to use no authentication method.  This
+ * policy is NOT RECOMMENDED unless it is unavoidable; see Section 7.5
+ * of RFC 3711 (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This policy is NOT RECOMMENDED for SRTP unless it is
+ * unavoidable, and it is NOT RECOMMENDED at all for SRTCP; see
+ * Section 7.5 of RFC 3711 (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_256_null_auth(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80() sets a crypto
+ * policy structure to a encryption and authentication policy using AES-192
+ * for RTP protection.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(&p)
+ * sets the srtp_crypto_policy_t at location p to use policy
+ * AES_CM_192_HMAC_SHA1_80 as defined in RFC 6188.  This policy uses AES-192
+ * Counter Mode encryption and HMAC-SHA1 authentication, with an 80 bit
+ * authentication tag.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32() sets a crypto
+ * policy structure to a short-authentication tag policy using AES-192
+ * encryption.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(&p)
+ * sets the srtp_crypto_policy_t at location p to use policy
+ * AES_CM_192_HMAC_SHA1_32 as defined in RFC 6188.  This policy uses AES-192
+ * Counter Mode encryption and HMAC-SHA1 authentication, with an
+ * authentication tag that is only 32 bits long.  This length is
+ * considered adequate only for protecting audio and video media that
+ * use a stateless playback function.  See Section 7.5 of RFC 3711
+ * (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This crypto policy is intended for use in SRTP, but not in
+ * SRTCP.  It is recommended that a policy that uses longer
+ * authentication tags be used for SRTCP.  See Section 7.5 of RFC 3711
+ * (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_cm_192_null_auth() sets a crypto
+ * policy structure to an encryption-only policy
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_cm_192_null_auth(&p) sets
+ * the srtp_crypto_policy_t at location p to use the SRTP default cipher
+ * (AES-192 Counter Mode), but to use no authentication method.  This
+ * policy is NOT RECOMMENDED unless it is unavoidable; see Section 7.5
+ * of RFC 3711 (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @warning This policy is NOT RECOMMENDED for SRTP unless it is
+ * unavoidable, and it is NOT RECOMMENDED at all for SRTCP; see
+ * Section 7.5 of RFC 3711 (http://www.ietf.org/rfc/rfc3711.txt).
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_cm_192_null_auth(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_gcm_128_16_auth() sets a crypto
+ * policy structure to an AEAD encryption policy.
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_gcm_128_16_auth(&p) sets
+ * the srtp_crypto_policy_t at location p to use the SRTP default cipher
+ * (AES-128 Galois Counter Mode) with 16 octet auth tag.  This
+ * policy applies confidentiality and authentication to both the
+ * RTP and RTCP packets.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_gcm_128_16_auth(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_aes_gcm_256_16_auth() sets a crypto
+ * policy structure to an AEAD encryption policy
+ *
+ * @param p is a pointer to the policy structure to be set
+ *
+ * The function call srtp_crypto_policy_set_aes_gcm_256_16_auth(&p) sets
+ * the srtp_crypto_policy_t at location p to use the SRTP default cipher
+ * (AES-256 Galois Counter Mode) with 16 octet auth tag.  This
+ * policy applies confidentiality and authentication to both the
+ * RTP and RTCP packets.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return void.
+ *
+ */
+void srtp_crypto_policy_set_aes_gcm_256_16_auth(srtp_crypto_policy_t *p);
+
+/**
+ * @brief srtp_crypto_policy_set_from_profile_for_rtp() sets a crypto policy
+ * structure to the appropriate value for RTP based on an srtp_profile_t
+ *
+ * @param policy is a pointer to the policy structure to be set
+ *
+ * @param profile is an enumeration for the policy to be set
+ *
+ * The function call srtp_crypto_policy_set_rtp_default(&policy, profile)
+ * sets the srtp_crypto_policy_t at location policy to the policy for RTP
+ * protection, as defined by the srtp_profile_t profile.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return values
+ *     - srtp_err_status_ok         no problems were encountered
+ *     - srtp_err_status_bad_param  the profile is not supported
+ *
+ */
+srtp_err_status_t srtp_crypto_policy_set_from_profile_for_rtp(
+    srtp_crypto_policy_t *policy,
+    srtp_profile_t profile);
+
+/**
+ * @brief srtp_crypto_policy_set_from_profile_for_rtcp() sets a crypto policy
+ * structure to the appropriate value for RTCP based on an srtp_profile_t
+ *
+ * @param policy is a pointer to the policy structure to be set
+ *
+ * @param profile is an enumeration for the policy to be set
+ *
+ * The function call srtp_crypto_policy_set_rtcp_default(&policy, profile)
+ * sets the srtp_crypto_policy_t at location policy to the policy for RTCP
+ * protection, as defined by the srtp_profile_t profile.
+ *
+ * This function is a convenience that helps to avoid dealing directly
+ * with the policy data structure.  You are encouraged to initialize
+ * policy elements with this function call.  Doing so may allow your
+ * code to be forward compatible with later versions of libSRTP that
+ * include more elements in the srtp_crypto_policy_t datatype.
+ *
+ * @return values
+ *     - srtp_err_status_ok         no problems were encountered
+ *     - srtp_err_status_bad_param  the profile is not supported
+ *
+ */
+srtp_err_status_t srtp_crypto_policy_set_from_profile_for_rtcp(
+    srtp_crypto_policy_t *policy,
+    srtp_profile_t profile);
+
+/*
+ * The default policy - provides a convenient way for callers to use
+ * the default security policy
+ *
+ * The default policy is defined in RFC 3711
+ * (Section 5. Default and mandatory-to-implement Transforms)
+ *
+ */
+
+/*
+ * NOTE: cipher_key_len is really key len (128 bits) plus salt len
+ *  (112 bits)
+ */
+/* There are hard-coded 16's for base_key_len in the key generation code */
+
+void srtp_crypto_policy_set_rtp_default(srtp_crypto_policy_t *p)
+{
+    p->cipher_type = SRTP_AES_ICM_128;
+    p->cipher_key_len =
+        SRTP_AES_ICM_128_KEY_LEN_WSALT; /* default 128 bits per RFC 3711 */
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20; /* default 160 bits per RFC 3711 */
+    p->auth_tag_len = 10; /* default 80 bits per RFC 3711 */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+void srtp_crypto_policy_set_rtcp_default(srtp_crypto_policy_t *p)
+{
+    p->cipher_type = SRTP_AES_ICM_128;
+    p->cipher_key_len =
+        SRTP_AES_ICM_128_KEY_LEN_WSALT; /* default 128 bits per RFC 3711 */
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20; /* default 160 bits per RFC 3711 */
+    p->auth_tag_len = 10; /* default 80 bits per RFC 3711 */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+void srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(srtp_crypto_policy_t *p)
+{
+    /*
+     * corresponds to RFC 4568
+     *
+     * note that this crypto policy is intended for SRTP, but not SRTCP
+     */
+
+    p->cipher_type = SRTP_AES_ICM_128;
+    p->cipher_key_len =
+        SRTP_AES_ICM_128_KEY_LEN_WSALT; /* 128 bit key, 112 bit salt */
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20; /* 160 bit key               */
+    p->auth_tag_len = 4;  /* 32 bit tag                */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+void srtp_crypto_policy_set_aes_cm_128_null_auth(srtp_crypto_policy_t *p)
+{
+    /*
+     * corresponds to RFC 4568
+     *
+     * note that this crypto policy is intended for SRTP, but not SRTCP
+     */
+
+    p->cipher_type = SRTP_AES_ICM_128;
+    p->cipher_key_len =
+        SRTP_AES_ICM_128_KEY_LEN_WSALT; /* 128 bit key, 112 bit salt */
+    p->auth_type = SRTP_NULL_AUTH;
+    p->auth_key_len = 0;
+    p->auth_tag_len = 0;
+    p->sec_serv = sec_serv_conf;
+}
+
+void srtp_crypto_policy_set_null_cipher_hmac_sha1_80(srtp_crypto_policy_t *p)
+{
+    /*
+     * corresponds to RFC 4568
+     */
+
+    p->cipher_type = SRTP_NULL_CIPHER;
+    p->cipher_key_len =
+        SRTP_AES_ICM_128_KEY_LEN_WSALT; /* 128 bit key, 112 bit salt */
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20;
+    p->auth_tag_len = 10;
+    p->sec_serv = sec_serv_auth;
+}
+
+void srtp_crypto_policy_set_null_cipher_hmac_null(srtp_crypto_policy_t *p)
+{
+    /*
+     * Should only be used for testing
+     */
+
+    p->cipher_type = SRTP_NULL_CIPHER;
+    p->cipher_key_len = 0;
+    p->auth_type = SRTP_NULL_AUTH;
+    p->auth_key_len = 0;
+    p->auth_tag_len = 0;
+    p->sec_serv = sec_serv_none;
+}
+
+void srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80(srtp_crypto_policy_t *p)
+{
+    /*
+     * corresponds to RFC 6188
+     */
+
+    p->cipher_type = SRTP_AES_ICM_256;
+    p->cipher_key_len = SRTP_AES_ICM_256_KEY_LEN_WSALT;
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20; /* default 160 bits per RFC 3711 */
+    p->auth_tag_len = 10; /* default 80 bits per RFC 3711 */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+void srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32(srtp_crypto_policy_t *p)
+{
+    /*
+     * corresponds to RFC 6188
+     *
+     * note that this crypto policy is intended for SRTP, but not SRTCP
+     */
+
+    p->cipher_type = SRTP_AES_ICM_256;
+    p->cipher_key_len = SRTP_AES_ICM_256_KEY_LEN_WSALT;
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20; /* default 160 bits per RFC 3711 */
+    p->auth_tag_len = 4;  /* default 80 bits per RFC 3711 */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+/*
+ * AES-256 with no authentication.
+ */
+void srtp_crypto_policy_set_aes_cm_256_null_auth(srtp_crypto_policy_t *p)
+{
+    p->cipher_type = SRTP_AES_ICM_256;
+    p->cipher_key_len = SRTP_AES_ICM_256_KEY_LEN_WSALT;
+    p->auth_type = SRTP_NULL_AUTH;
+    p->auth_key_len = 0;
+    p->auth_tag_len = 0;
+    p->sec_serv = sec_serv_conf;
+}
+
+void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(srtp_crypto_policy_t *p)
+{
+    /*
+     * corresponds to RFC 6188
+     */
+
+    p->cipher_type = SRTP_AES_ICM_192;
+    p->cipher_key_len = SRTP_AES_ICM_192_KEY_LEN_WSALT;
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20; /* default 160 bits per RFC 3711 */
+    p->auth_tag_len = 10; /* default 80 bits per RFC 3711 */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+void srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(srtp_crypto_policy_t *p)
+{
+    /*
+     * corresponds to RFC 6188
+     *
+     * note that this crypto policy is intended for SRTP, but not SRTCP
+     */
+
+    p->cipher_type = SRTP_AES_ICM_192;
+    p->cipher_key_len = SRTP_AES_ICM_192_KEY_LEN_WSALT;
+    p->auth_type = SRTP_HMAC_SHA1;
+    p->auth_key_len = 20; /* default 160 bits per RFC 3711 */
+    p->auth_tag_len = 4;  /* default 80 bits per RFC 3711 */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+/*
+ * AES-192 with no authentication.
+ */
+void srtp_crypto_policy_set_aes_cm_192_null_auth(srtp_crypto_policy_t *p)
+{
+    p->cipher_type = SRTP_AES_ICM_192;
+    p->cipher_key_len = SRTP_AES_ICM_192_KEY_LEN_WSALT;
+    p->auth_type = SRTP_NULL_AUTH;
+    p->auth_key_len = 0;
+    p->auth_tag_len = 0;
+    p->sec_serv = sec_serv_conf;
+}
+
+/*
+ * AES-128 GCM mode with 16 octet auth tag.
+ */
+void srtp_crypto_policy_set_aes_gcm_128_16_auth(srtp_crypto_policy_t *p)
+{
+    p->cipher_type = SRTP_AES_GCM_128;
+    p->cipher_key_len = SRTP_AES_GCM_128_KEY_LEN_WSALT;
+    p->auth_type = SRTP_NULL_AUTH; /* GCM handles the auth for us */
+    p->auth_key_len = 0;
+    p->auth_tag_len = 16; /* 16 octet tag length */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+/*
+ * AES-256 GCM mode with 16 octet auth tag.
+ */
+void srtp_crypto_policy_set_aes_gcm_256_16_auth(srtp_crypto_policy_t *p)
+{
+    p->cipher_type = SRTP_AES_GCM_256;
+    p->cipher_key_len = SRTP_AES_GCM_256_KEY_LEN_WSALT;
+    p->auth_type = SRTP_NULL_AUTH; /* GCM handles the auth for us */
+    p->auth_key_len = 0;
+    p->auth_tag_len = 16; /* 16 octet tag length */
+    p->sec_serv = sec_serv_conf_and_auth;
+}
+
+srtp_err_status_t srtp_crypto_policy_set_from_profile_for_rtp(
+    srtp_crypto_policy_t *policy,
+    srtp_profile_t profile)
+{
+    /* set SRTP policy from the SRTP profile in the key set */
+    switch (profile) {
+    case srtp_profile_reserved:
+        return srtp_err_status_bad_param;
+    case srtp_profile_null_null:
+        srtp_crypto_policy_set_null_cipher_hmac_null(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes128_cm_sha1_80:
+        srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes128_cm_sha1_32:
+        srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes192_cm_sha1_80:
+        srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes192_cm_sha1_32:
+        srtp_crypto_policy_set_aes_cm_192_hmac_sha1_32(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes256_cm_sha1_80:
+        srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes256_cm_sha1_32:
+        srtp_crypto_policy_set_aes_cm_256_hmac_sha1_32(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_null_sha1_80:
+        srtp_crypto_policy_set_null_cipher_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+#ifdef GCM
+    case srtp_profile_aead_aes_128_gcm:
+        srtp_crypto_policy_set_aes_gcm_128_16_auth(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aead_aes_256_gcm:
+        srtp_crypto_policy_set_aes_gcm_256_16_auth(policy);
+        return srtp_err_status_ok;
+#else
+    case srtp_profile_aead_aes_128_gcm:
+        return srtp_err_status_bad_param;
+    case srtp_profile_aead_aes_256_gcm:
+        return srtp_err_status_bad_param;
+#endif
+    case srtp_profile_null_sha1_32:
+        srtp_crypto_policy_set_null_cipher_hmac_sha1_80(policy);
+        policy->auth_tag_len = 4;
+        return srtp_err_status_ok;
+    }
+
+    return srtp_err_status_bad_param;
+}
+
+srtp_err_status_t srtp_crypto_policy_set_from_profile_for_rtcp(
+    srtp_crypto_policy_t *policy,
+    srtp_profile_t profile)
+{
+    /* set SRTP policy from the SRTP profile in the key set */
+    switch (profile) {
+    case srtp_profile_reserved:
+        return srtp_err_status_bad_param;
+    case srtp_profile_null_null:
+        srtp_crypto_policy_set_null_cipher_hmac_null(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes128_cm_sha1_80:
+        srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes128_cm_sha1_32:
+        /* We do not honor the 32-bit auth tag request since
+         * this is not compliant with RFC 3711 */
+        srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes192_cm_sha1_80:
+        srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes192_cm_sha1_32:
+        /* We do not honor the 32-bit auth tag request since
+         * this is not compliant with RFC 3711 */
+        srtp_crypto_policy_set_aes_cm_192_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes256_cm_sha1_80:
+        srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aes256_cm_sha1_32:
+        /* We do not honor the 32-bit auth tag request since
+         * this is not compliant with RFC 6188 */
+        srtp_crypto_policy_set_aes_cm_256_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_null_sha1_80:
+        srtp_crypto_policy_set_null_cipher_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+#ifdef GCM
+    case srtp_profile_aead_aes_128_gcm:
+        srtp_crypto_policy_set_aes_gcm_128_16_auth(policy);
+        return srtp_err_status_ok;
+    case srtp_profile_aead_aes_256_gcm:
+        srtp_crypto_policy_set_aes_gcm_256_16_auth(policy);
+        return srtp_err_status_ok;
+#else
+    case srtp_profile_aead_aes_128_gcm:
+        return srtp_err_status_bad_param;
+    case srtp_profile_aead_aes_256_gcm:
+        return srtp_err_status_bad_param;
+#endif
+    case srtp_profile_null_sha1_32:
+        /* We do not honor the 32-bit auth tag request since
+         * this is not compliant with RFC 3711 */
+        srtp_crypto_policy_set_null_cipher_hmac_sha1_80(policy);
+        return srtp_err_status_ok;
+    }
+
+    return srtp_err_status_bad_param;
+}
+
 srtp_err_status_t srtp_policy_create(srtp_policy_t *policy)
 {
     srtp_policy_t p;

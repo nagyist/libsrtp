@@ -69,6 +69,15 @@ typedef struct srtp_stream_ctx_t_ srtp_stream_ctx_t;
 typedef srtp_stream_ctx_t *srtp_stream_t;
 typedef struct srtp_stream_list_ctx_t_ *srtp_stream_list_t;
 
+typedef struct srtp_crypto_policy_t {
+    srtp_cipher_type_id_t cipher_type;
+    size_t cipher_key_len;
+    srtp_auth_type_id_t auth_type;
+    size_t auth_key_len;
+    size_t auth_tag_len;
+    srtp_sec_serv_t sec_serv;
+} srtp_crypto_policy_t;
+
 typedef struct srtp_master_key_t {
     uint8_t key[SRTP_MAX_KEY_LEN];
     size_t key_len;
@@ -77,10 +86,11 @@ typedef struct srtp_master_key_t {
 } srtp_master_key_t;
 
 typedef struct srtp_policy_ctx_t_ {
-    srtp_ssrc_t ssrc;          /**< The SSRC value of stream, or the    */
-                               /**< flags SSRC_ANY_INBOUND or           */
-                               /**< SSRC_ANY_OUTBOUND if key sharing    */
-                               /**< is used for this policy element.    */
+    srtp_profile_t profile; /**< The SRTP profile that this policy applies to */
+    srtp_ssrc_t ssrc;       /**< The SSRC value of stream, or the    */
+                            /**< flags SSRC_ANY_INBOUND or           */
+                            /**< SSRC_ANY_OUTBOUND if key sharing    */
+                            /**< is used for this policy element.    */
     srtp_crypto_policy_t rtp;  /**< SRTP crypto policy.                 */
     srtp_crypto_policy_t rtcp; /**< SRTCP crypto policy.                */
     srtp_master_key_t master_keys[SRTP_MAX_NUM_MASTER_KEYS];
@@ -102,8 +112,6 @@ typedef struct srtp_policy_ctx_t_ {
                               /**<  ids.                               */
     bool use_cryptex;         /**< Encrypt header block and CSRCs with */
                               /**< cryptex, RFC 9335.                  */
-
-    srtp_profile_t profile;
 } srtp_policy_ctx_t_;
 
 /*

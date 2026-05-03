@@ -2235,7 +2235,7 @@ srtp_err_status_t srtp_session_print_policy(srtp_t srtp)
     return data.status;
 }
 
-srtp_err_status_t srtp_print_policy(const test_policy_t * test_policy)
+srtp_err_status_t srtp_print_policy(const test_policy_t *test_policy)
 {
     srtp_err_status_t status;
     srtp_policy_t policy;
