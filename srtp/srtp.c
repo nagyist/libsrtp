@@ -581,14 +581,8 @@ static srtp_err_status_t srtp_stream_alloc(srtp_stream_ctx_t **str_ptr,
      */
     if (p->num_master_keys > 0) {
         str->num_master_keys = p->num_master_keys;
-    } else if (p->rtp.cipher_type == SRTP_NULL_CIPHER &&
-               p->rtp.auth_type == SRTP_NULL_AUTH &&
-               p->rtcp.cipher_type == SRTP_NULL_CIPHER &&
-               p->rtcp.auth_type == SRTP_NULL_AUTH) {
-        /*
-         * TODO: Special case for null null, no key required.
-         * Maybe better to handle differently.
-         */
+    } else if (srtp_policy_is_null_cipher_null_auth(p)) {
+        /* Protect/unprotect paths still require a runtime session key slot. */
         str->num_master_keys = 1;
     } else {
         srtp_stream_dealloc(str, NULL);
@@ -1582,11 +1576,40 @@ srtp_err_status_t srtp_stream_init_all_master_keys(srtp_stream_ctx_t *srtp,
         return srtp_err_status_bad_param;
     }
 
-    // TODO
-    // srtp->num_master_keys = p->num_master_keys; // not sure about this
-    // ... will access session_keys[0]
     srtp->use_mki = p->use_mki;
     srtp->mki_size = p->mki_size;
+
+    if (p->num_master_keys == 0) {
+        srtp_session_keys_t *session_keys;
+
+        if (!srtp_policy_is_null_cipher_null_auth(p) || p->use_mki ||
+            srtp->num_master_keys != 1) {
+            return srtp_err_status_bad_param;
+        }
+
+        session_keys = &srtp->session_keys[0];
+        srtp_key_limit_set(session_keys->limit, 0xffffffffffffLL);
+
+        status = srtp_cipher_init(session_keys->rtp_cipher, NULL);
+        if (status) {
+            return status;
+        }
+        status = srtp_auth_init(session_keys->rtp_auth, NULL);
+        if (status) {
+            return status;
+        }
+        if (session_keys->rtp_xtn_hdr_cipher != NULL) {
+            status = srtp_cipher_init(session_keys->rtp_xtn_hdr_cipher, NULL);
+            if (status) {
+                return status;
+            }
+        }
+        status = srtp_cipher_init(session_keys->rtcp_cipher, NULL);
+        if (status) {
+            return status;
+        }
+        return srtp_auth_init(session_keys->rtcp_auth, NULL);
+    }
 
     for (size_t i = 0; i < srtp->num_master_keys; i++) {
         status = srtp_stream_init_keys(&srtp->session_keys[i],

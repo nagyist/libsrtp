@@ -476,6 +476,72 @@ static void srtp_policy_enc_hdr_xtnd_ids_add_remove_boundaries(void)
     srtp_policy_destroy(policy);
 }
 
+static void create_null_null_policy(srtp_policy_t *policy)
+{
+    CHECK_OK(srtp_policy_create(policy));
+    CHECK_OK(
+        srtp_policy_set_ssrc(*policy, (srtp_ssrc_t){ ssrc_any_outbound, 0 }));
+    CHECK_OK(srtp_policy_set_profile(*policy, srtp_profile_null_null));
+}
+
+static void srtp_policy_null_null_no_key_valid(void)
+{
+    srtp_policy_t policy;
+
+    create_null_null_policy(&policy);
+    CHECK_OK(srtp_policy_validate(policy));
+    assert_policy_creates_session(policy);
+
+    srtp_policy_destroy(policy);
+}
+
+static void srtp_policy_null_null_with_key_rejected(void)
+{
+    srtp_policy_t policy;
+
+    create_null_null_policy(&policy);
+    CHECK_OK(srtp_policy_add_key(policy, base_master_key,
+                                 sizeof(base_master_key), base_master_salt,
+                                 sizeof(base_master_salt), NULL, 0));
+    CHECK_RETURN(srtp_policy_validate(policy), srtp_err_status_bad_param);
+
+    srtp_policy_destroy(policy);
+}
+
+static void srtp_policy_null_null_after_key_rejected(void)
+{
+    srtp_policy_t policy;
+
+    create_valid_policy(&policy);
+    CHECK_OK(srtp_policy_set_profile(policy, srtp_profile_null_null));
+    CHECK_RETURN(srtp_policy_validate(policy), srtp_err_status_bad_param);
+
+    srtp_policy_destroy(policy);
+}
+
+static void srtp_policy_null_null_no_key_cryptex_enc_hdr_rejected(void)
+{
+    srtp_policy_t policy;
+
+    create_null_null_policy(&policy);
+    CHECK_OK(srtp_policy_set_cryptex(policy, true));
+    CHECK_OK(srtp_policy_add_enc_hdr_xtnd_id(policy, 1));
+    CHECK_RETURN(srtp_policy_validate(policy), srtp_err_status_bad_param);
+
+    srtp_policy_destroy(policy);
+}
+
+static void srtp_policy_null_null_no_key_mki_rejected(void)
+{
+    srtp_policy_t policy;
+
+    create_null_null_policy(&policy);
+    CHECK_OK(srtp_policy_use_mki(policy, sizeof(mki4)));
+    CHECK_RETURN(srtp_policy_validate(policy), srtp_err_status_bad_param);
+
+    srtp_policy_destroy(policy);
+}
+
 static void srtp_policy_all_functions_null_policy(void)
 {
     srtp_policy_t cloned;
@@ -574,6 +640,16 @@ TEST_LIST = {
       srtp_policy_cryptex_and_enc_hdr_xtnd_ids_invalid },
     { "srtp_policy_enc_hdr_xtnd_ids_add_remove_boundaries()",
       srtp_policy_enc_hdr_xtnd_ids_add_remove_boundaries },
+    { "srtp_policy_null_null_no_key_valid()",
+      srtp_policy_null_null_no_key_valid },
+    { "srtp_policy_null_null_with_key_rejected()",
+      srtp_policy_null_null_with_key_rejected },
+    { "srtp_policy_null_null_after_key_rejected()",
+      srtp_policy_null_null_after_key_rejected },
+    { "srtp_policy_null_null_no_key_cryptex_enc_hdr_rejected()",
+      srtp_policy_null_null_no_key_cryptex_enc_hdr_rejected },
+    { "srtp_policy_null_null_no_key_mki_rejected()",
+      srtp_policy_null_null_no_key_mki_rejected },
     { "srtp_policy_all_functions_null_policy()",
       srtp_policy_all_functions_null_policy },
     { 0 }

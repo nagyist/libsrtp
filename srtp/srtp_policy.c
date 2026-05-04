@@ -866,16 +866,14 @@ srtp_err_status_t srtp_policy_validate(srtp_policy_t policy)
         return srtp_err_status_bad_param;
     }
 
-    // TODO: special case , no key required for null cipher and null auth
-    // this currently short cuts the rest of validate, is that ok ?
-    if (policy->rtp.cipher_type == SRTP_NULL_CIPHER &&
-        policy->rtp.auth_type == SRTP_NULL_AUTH &&
-        policy->rtcp.cipher_type == SRTP_NULL_CIPHER &&
-        policy->rtcp.auth_type == SRTP_NULL_AUTH) {
-        return srtp_err_status_ok;
-    }
+    bool null_cipher_null_auth = srtp_policy_is_null_cipher_null_auth(policy);
 
-    if (policy->num_master_keys == 0) {
+    if (null_cipher_null_auth) {
+        if (policy->num_master_keys != 0 || policy->use_mki ||
+            policy->mki_size != 0) {
+            return srtp_err_status_bad_param;
+        }
+    } else if (policy->num_master_keys == 0) {
         return srtp_err_status_bad_param;
     }
 

@@ -277,8 +277,7 @@ typedef struct {
  */
 typedef enum {
     srtp_profile_reserved = 0,
-    srtp_profile_null_null =
-        1, // TODO: for testing and troubleshooting only ??? check rfc3711
+    srtp_profile_null_null = 1,
     srtp_profile_aes128_cm_sha1_80 = 2,
     srtp_profile_aes128_cm_sha1_32 = 3,
     srtp_profile_aes192_cm_sha1_80 = 4,

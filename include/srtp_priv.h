@@ -114,6 +114,15 @@ typedef struct srtp_policy_ctx_t_ {
                               /**< cryptex, RFC 9335.                  */
 } srtp_policy_ctx_t_;
 
+static inline bool srtp_policy_is_null_cipher_null_auth(
+    const srtp_policy_t policy)
+{
+    return policy != NULL && policy->rtp.cipher_type == SRTP_NULL_CIPHER &&
+           policy->rtp.auth_type == SRTP_NULL_AUTH &&
+           policy->rtcp.cipher_type == SRTP_NULL_CIPHER &&
+           policy->rtcp.auth_type == SRTP_NULL_AUTH;
+}
+
 /*
  * the following declarations are libSRTP internal functions
  */
