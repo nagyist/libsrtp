@@ -893,8 +893,17 @@ srtp_err_status_t srtp_policy_validate(srtp_policy_t policy)
         return srtp_err_status_bad_param;
     }
 
+    size_t expected_key_len =
+        srtp_profile_get_master_key_length(policy->profile);
+    size_t expected_salt_len =
+        srtp_profile_get_master_salt_length(policy->profile);
+
     for (size_t i = 0; i < policy->num_master_keys; i++) {
         if (policy->master_keys[i].key_len == 0) {
+            return srtp_err_status_bad_param;
+        }
+        if (policy->master_keys[i].key_len != expected_key_len ||
+            policy->master_keys[i].salt_len != expected_salt_len) {
             return srtp_err_status_bad_param;
         }
         if (policy->use_mki &&
@@ -1063,7 +1072,7 @@ srtp_err_status_t srtp_policy_add_key(srtp_policy_t policy,
     memcpy(policy->master_keys[key_index].key, key, key_len);
     policy->master_keys[key_index].key_len = key_len;
     memcpy(policy->master_keys[key_index].key + key_len, salt, salt_len);
-    policy->master_keys[key_index].key_len += salt_len;
+    policy->master_keys[key_index].salt_len = salt_len;
     if (mki_len > 0) {
         memcpy(policy->master_keys[key_index].mki_id, mki, mki_len);
     }

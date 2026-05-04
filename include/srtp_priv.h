@@ -81,6 +81,7 @@ typedef struct srtp_crypto_policy_t {
 typedef struct srtp_master_key_t {
     uint8_t key[SRTP_MAX_KEY_LEN];
     size_t key_len;
+    size_t salt_len;
     uint8_t mki_id[SRTP_MAX_MKI_LEN];
     size_t mki_id_len;
 } srtp_master_key_t;

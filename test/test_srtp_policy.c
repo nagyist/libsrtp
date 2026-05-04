@@ -57,6 +57,14 @@ static const uint8_t alt_master_salt[14] = {
     0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd,
     0xef, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54,
 };
+static const uint8_t long_master_key[17] = {
+    0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90,
+    0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0, 0x00, 0x11,
+};
+static const uint8_t long_master_salt[15] = {
+    0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
+    0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32,
+};
 static const uint8_t mki4[4] = { 0x01, 0x02, 0x03, 0x04 };
 static const uint8_t mki3[3] = { 0x09, 0x08, 0x07 };
 
@@ -69,6 +77,15 @@ static void create_valid_policy(srtp_policy_t *policy)
     CHECK_OK(srtp_policy_add_key(*policy, base_master_key,
                                  sizeof(base_master_key), base_master_salt,
                                  sizeof(base_master_salt), NULL, 0));
+}
+
+static void create_policy_with_profile(srtp_policy_t *policy,
+                                       srtp_profile_t profile)
+{
+    CHECK_OK(srtp_policy_create(policy));
+    CHECK_OK(
+        srtp_policy_set_ssrc(*policy, (srtp_ssrc_t){ ssrc_any_outbound, 0 }));
+    CHECK_OK(srtp_policy_set_profile(*policy, profile));
 }
 
 static void assert_policy_creates_session(srtp_policy_t policy)
@@ -193,6 +210,67 @@ static void srtp_policy_set_sec_serv_requires_profile(void)
     srtp_policy_destroy(policy);
 }
 
+static void assert_null_sha1_profile_accepts_128_bit_key(srtp_profile_t profile)
+{
+    srtp_policy_t policy;
+
+    CHECK(srtp_profile_get_master_key_length(profile) == 16);
+    CHECK(srtp_profile_get_master_salt_length(profile) == 14);
+
+    create_policy_with_profile(&policy, profile);
+    CHECK_OK(srtp_policy_add_key(policy, base_master_key,
+                                 sizeof(base_master_key), base_master_salt,
+                                 sizeof(base_master_salt), NULL, 0));
+    CHECK_OK(srtp_policy_validate(policy));
+    assert_policy_creates_session(policy);
+
+    srtp_policy_destroy(policy);
+}
+
+static void assert_null_sha1_profile_rejects_key_salt(srtp_profile_t profile,
+                                                      const uint8_t *key,
+                                                      size_t key_len,
+                                                      const uint8_t *salt,
+                                                      size_t salt_len)
+{
+    srtp_policy_t policy;
+
+    create_policy_with_profile(&policy, profile);
+    CHECK_OK(
+        srtp_policy_add_key(policy, key, key_len, salt, salt_len, NULL, 0));
+    CHECK_RETURN(srtp_policy_validate(policy), srtp_err_status_bad_param);
+
+    srtp_policy_destroy(policy);
+}
+
+static void assert_null_sha1_profile_requires_128_bit_key(
+    srtp_profile_t profile)
+{
+    assert_null_sha1_profile_accepts_128_bit_key(profile);
+    assert_null_sha1_profile_rejects_key_salt(
+        profile, base_master_key, sizeof(base_master_key) - 1, base_master_salt,
+        sizeof(base_master_salt));
+    assert_null_sha1_profile_rejects_key_salt(
+        profile, long_master_key, sizeof(long_master_key), base_master_salt,
+        sizeof(base_master_salt));
+    assert_null_sha1_profile_rejects_key_salt(
+        profile, base_master_key, sizeof(base_master_key), base_master_salt,
+        sizeof(base_master_salt) - 1);
+    assert_null_sha1_profile_rejects_key_salt(
+        profile, base_master_key, sizeof(base_master_key), long_master_salt,
+        sizeof(long_master_salt));
+}
+
+static void srtp_policy_null_sha1_80_requires_128_bit_key(void)
+{
+    assert_null_sha1_profile_requires_128_bit_key(srtp_profile_null_sha1_80);
+}
+
+static void srtp_policy_null_sha1_32_requires_128_bit_key(void)
+{
+    assert_null_sha1_profile_requires_128_bit_key(srtp_profile_null_sha1_32);
+}
+
 static void srtp_policy_add_key_oversize_fails(void)
 {
     uint8_t long_key[SRTP_MAX_KEY_LEN];
@@ -314,8 +392,9 @@ static void srtp_policy_add_key_strict_null_checks(void)
     CHECK_RETURN(srtp_policy_add_key(policy, key, sizeof(key), salt,
                                      sizeof(salt), NULL, sizeof(mki)),
                  srtp_err_status_bad_param);
-    CHECK_OK(srtp_policy_add_key(policy, key, sizeof(key), salt, sizeof(salt),
-                                 mki, sizeof(mki)));
+    CHECK_OK(srtp_policy_add_key(policy, base_master_key,
+                                 sizeof(base_master_key), base_master_salt,
+                                 sizeof(base_master_salt), mki, sizeof(mki)));
     CHECK_OK(srtp_policy_validate(policy));
 
     srtp_policy_destroy(policy);
@@ -616,6 +695,10 @@ TEST_LIST = {
       srtp_policy_set_profile_reserved_fails },
     { "srtp_policy_set_sec_serv_requires_profile()",
       srtp_policy_set_sec_serv_requires_profile },
+    { "srtp_policy_null_sha1_80_requires_128_bit_key()",
+      srtp_policy_null_sha1_80_requires_128_bit_key },
+    { "srtp_policy_null_sha1_32_requires_128_bit_key()",
+      srtp_policy_null_sha1_32_requires_128_bit_key },
     { "srtp_policy_add_key_oversize_fails()",
       srtp_policy_add_key_oversize_fails },
     { "srtp_policy_mki_length_transitions_and_limits()",

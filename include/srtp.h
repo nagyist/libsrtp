@@ -284,9 +284,8 @@ typedef enum {
     srtp_profile_aes192_cm_sha1_32 = 5,
     srtp_profile_aes256_cm_sha1_80 = 6,
     srtp_profile_aes256_cm_sha1_32 = 7,
-    srtp_profile_null_sha1_80 =
-        8, // TODO: remove, how to interact with security service ?
-    srtp_profile_null_sha1_32 = 9, // TODO: remove ?
+    srtp_profile_null_sha1_80 = 8,
+    srtp_profile_null_sha1_32 = 9,
     srtp_profile_aead_aes_128_gcm = 10,
     srtp_profile_aead_aes_256_gcm = 11
 } srtp_profile_t;
