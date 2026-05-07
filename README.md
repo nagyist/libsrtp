@@ -140,8 +140,10 @@ function as an opaque `srtp_policy_t` handle. A single policy handle
 describes one stream policy. To configure multiple streams, create a
 session and add additional policies with `srtp_stream_add()`.
 
-A policy handle is configured with `srtp_policy_set_*` functions. At a minimum this includes SSRC selection, profile selection, and key/salt
-material. The profile configures RTP/RTCP crypto policy settings, while the SSRC identify how and where that policy is applied.
+A policy handle is configured with `srtp_policy_set_*` functions. At a
+minimum, this includes SSRC selection, profile selection, and key/salt
+material. The profile configures RTP/RTCP crypto policy settings, while the
+SSRC selector identifies how and where that policy is applied.
 
 --------------------------------------------------------------------------------
 

@@ -296,7 +296,12 @@ typedef srtp_policy_ctx_t *srtp_policy_t;
 /**
  * @brief Allocate a new policy handle.
  *
- * @param policy output pointer that receives the allocated policy handle.
+ * A policy handle describes one SRTP stream policy. Configure it with
+ * srtp_policy_set_ssrc(), srtp_policy_set_profile(), optional MKI and
+ * feature setters, and srtp_policy_add_key() before passing it to
+ * srtp_create() or srtp_stream_add().
+ *
+ * @param policy output pointer that receives the allocated policy.
  *
  * @return
  *    - srtp_err_status_ok if allocation succeeded.
@@ -309,9 +314,10 @@ srtp_err_status_t srtp_policy_create(srtp_policy_t *policy);
  * @brief Clone an existing policy handle.
  *
  * @param policy source policy to clone.
- * @param cloned_policy output pointer that receives the cloned policy handle.
+ * @param cloned_policy output pointer that receives the cloned policy.
  *
- *  This copies all fields of the source policy, including keys.
+ * This copies all fields of the source policy, including configured keys. The
+ * cloned policy can be modified independently from the source policy.
  *
  * @return
  *    - srtp_err_status_ok if cloning succeeded.
@@ -327,6 +333,8 @@ srtp_err_status_t srtp_policy_clone(srtp_policy_t policy,
  * @param policy policy handle.
  * @param ssrc SSRC selector to apply.
  *
+ * Valid selectors are ssrc_specific, ssrc_any_inbound, and ssrc_any_outbound.
+ *
  * @return
  *    - srtp_err_status_ok if the SSRC selector was accepted.
  *    - srtp_err_status_bad_param if policy is NULL or ssrc.type is invalid.
@@ -338,6 +346,10 @@ srtp_err_status_t srtp_policy_set_ssrc(srtp_policy_t policy, srtp_ssrc_t ssrc);
  *
  * @param policy policy handle.
  * @param profile profile to apply.
+ *
+ * Call this before srtp_policy_set_sec_serv() and before validation. Keys
+ * added with srtp_policy_add_key() must match this profile's master key and
+ * salt lengths when the policy is validated.
  *
  * @return
  *    - srtp_err_status_ok if the profile was applied.
@@ -367,6 +379,8 @@ srtp_err_status_t srtp_policy_get_profile(srtp_policy_t policy,
  * @param rtp_sec_serv RTP security-service flags.
  * @param rtcp_sec_serv RTCP security-service flags.
  *
+ * The policy must already have a profile set with srtp_policy_set_profile().
+ *
  * @return
  *    - srtp_err_status_ok if flags were applied.
  *    - srtp_err_status_bad_param if policy is NULL or profile is unset.
@@ -376,14 +390,14 @@ srtp_err_status_t srtp_policy_set_sec_serv(srtp_policy_t policy,
                                            srtp_sec_serv_t rtcp_sec_serv);
 
 /**
- * @brief Enable or disable MKI and set the MKI length.
+ * @brief Enable or disable MKI on the policy.
  *
  * @param policy policy handle.
  * @param mki_len MKI length in octets (0 disables MKI).
  *
  * mki_len must be <= SRTP_MAX_MKI_LEN.
  * Call this with mki_len > 0 before adding MKI-tagged keys via
- * srtp_policy_add_key().
+ * srtp_policy_add_key(). Call this with mki_len == 0 to disable MKI.
  *
  * @return
  *    - srtp_err_status_ok if MKI settings were applied.
@@ -405,7 +419,7 @@ srtp_err_status_t srtp_policy_get_mki_length(srtp_policy_t policy,
                                              size_t *mki_len);
 
 /**
- * @brief Add an additional key/salt pair for MKI-based key selection.
+ * @brief Add a master key and salt to a policy handle.
  *
  * @param policy policy handle.
  * @param key pointer to key bytes.
@@ -419,12 +433,18 @@ srtp_err_status_t srtp_policy_get_mki_length(srtp_policy_t policy,
  * key and salt must not be NULL.
  * mki must not be NULL when mki_len > 0.
  * If MKI is enabled, mki_len must match the configured MKI length.
- * If MKI is disabled, mki_len must be 0 and only one key can be configured.
+ * If MKI is disabled, mki_len must be 0 and only one key can be configured. A
+ * policy can hold at most SRTP_MAX_NUM_MASTER_KEYS keys.
+ *
+ * The key and salt are stored separately in the policy. Validation requires
+ * their lengths to exactly match the configured profile. The null/null profile
+ * is valid only without keys and without MKI.
  *
  * @return
  *    - srtp_err_status_ok if key was added.
- *    - srtp_err_status_bad_param if policy is NULL, MKI is disabled, or
- *      sizes are invalid.
+ *    - srtp_err_status_bad_param if policy is NULL, key/salt/MKI arguments are
+ *      invalid, MKI state does not match mki_len, the non-MKI single-key limit
+ *      or key limit is exceeded, or key/salt/MKI sizes exceed supported limits.
  */
 srtp_err_status_t srtp_policy_add_key(srtp_policy_t policy,
                                       const uint8_t *key,
@@ -498,6 +518,8 @@ srtp_err_status_t srtp_policy_set_cryptex(srtp_policy_t policy,
  *
  * Duplicate IDs are rejected.
  * The number of configured IDs must be < SRTP_MAX_NUM_ENC_HDR_XTND_IDS.
+ * Policies with both cryptex and encrypted header extensions are rejected by
+ * srtp_policy_validate().
  *
  * @return
  *    - srtp_err_status_ok if ID was added.
@@ -534,7 +556,9 @@ void srtp_policy_destroy(srtp_policy_t policy);
  * @param policy policy handle.
  *
  * Validation checks include profile, SSRC selector, key/MKI consistency,
- * key count, and replay-window constraints.
+ * key count, profile key/salt lengths, replay-window constraints, and invalid
+ * cryptex/encrypted-header-extension combinations. The null/null profile is
+ * valid without keys and invalid with configured keys or MKI.
  *
  * @return
  *    - srtp_err_status_ok if policy is valid.
@@ -770,8 +794,8 @@ srtp_err_status_t srtp_update(srtp_t session, const srtp_policy_t policy);
  * @param session is the SRTP session that contains the streams
  *        to be updated.
  *
- * @param policy is the srtp_policy_t struct that describes the policy
- * for the session.
+ * @param policy is an srtp_policy_t handle that describes the update policy
+ * to apply to matching stream(s).
  *
  * @return
  *    - srtp_err_status_ok           if stream creation succeeded.
