@@ -257,19 +257,28 @@ static uint8_t *extract_key(const uint8_t **data,
 static bool extract_and_add_key(srtp_policy_t policy,
                                 const uint8_t **data,
                                 size_t *size,
-                                size_t key_size)
+                                size_t key_size,
+                                size_t salt_size)
 {
     bool added = false;
+    uint8_t *salt = NULL;
     uint8_t *key = extract_key(data, size, key_size);
     if (key == NULL) {
         return false;
     }
 
-    if (srtp_policy_add_key(policy, key, key_size, key, 0, NULL, 0) ==
+    salt = extract_key(data, size, salt_size);
+    if (salt == NULL) {
+        goto end;
+    }
+
+    if (srtp_policy_add_key(policy, key, key_size, salt, salt_size, NULL, 0) ==
         srtp_err_status_ok) {
         added = true;
     }
 
+end:
+    fuzz_free(salt);
     fuzz_free(key);
     return added;
 }
@@ -277,29 +286,35 @@ static bool extract_and_add_key(srtp_policy_t policy,
 static bool extract_and_add_master_key(srtp_policy_t policy,
                                        const uint8_t **data,
                                        size_t *size,
-                                       size_t key_size)
+                                       size_t key_size,
+                                       size_t salt_size)
 {
     bool added = false;
     uint8_t *key = NULL;
+    uint8_t *salt = NULL;
     uint16_t mki_id_size = 0;
     const uint8_t *mki = NULL;
     srtp_err_status_t status;
 
     EXTRACT_IF(&mki_id_size, *data, *size, sizeof(mki_id_size));
 
-    if (*size < key_size + mki_id_size) {
+    if (*size < key_size + salt_size + mki_id_size) {
         return false;
     }
 
     if (mki_id_size > SRTP_MAX_MKI_LEN) {
-        *data += key_size + mki_id_size;
-        *size -= key_size + mki_id_size;
+        *data += key_size + salt_size + mki_id_size;
+        *size -= key_size + salt_size + mki_id_size;
         return false;
     }
 
     key = extract_key(data, size, key_size);
     if (key == NULL) {
         return false;
+    }
+    salt = extract_key(data, size, salt_size);
+    if (salt == NULL) {
+        goto end;
     }
     mki = *data;
     *data += mki_id_size;
@@ -312,8 +327,8 @@ static bool extract_and_add_master_key(srtp_policy_t policy,
         }
     }
 
-    status =
-        srtp_policy_add_key(policy, key, key_size, key, 0, mki, mki_id_size);
+    status = srtp_policy_add_key(policy, key, key_size, salt, salt_size, mki,
+                                 mki_id_size);
     if (status != srtp_err_status_ok) {
         goto end;
     }
@@ -321,6 +336,7 @@ static bool extract_and_add_master_key(srtp_policy_t policy,
     added = true;
 
 end:
+    fuzz_free(salt);
     fuzz_free(key);
     return added;
 }
@@ -328,9 +344,12 @@ end:
 static srtp_policy_t extract_policy(const uint8_t **data, size_t *size)
 {
     srtp_policy_t policy = NULL;
+    srtp_profile_t profile;
+    size_t key_size;
+    size_t salt_size;
     srtp_err_status_t status;
     struct {
-        uint8_t srtp_crypto_policy_func;
+        uint8_t srtp_profile;
         size_t window_size;
         uint8_t allow_repeat_tx;
         uint8_t ssrc_type;
@@ -342,32 +361,30 @@ static srtp_policy_t extract_policy(const uint8_t **data, size_t *size)
 
     EXTRACT_IF(&params, *data, *size, sizeof(params));
 
-    params.srtp_crypto_policy_func %= sizeof(fuzz_srtp_crypto_policies) /
-                                      sizeof(fuzz_srtp_crypto_policies[0]);
+    params.srtp_profile %=
+        sizeof(fuzz_srtp_profiles) / sizeof(fuzz_srtp_profiles[0]);
     params.allow_repeat_tx %= 2;
     params.ssrc_type %=
         sizeof(fuzz_ssrc_type_map) / sizeof(fuzz_ssrc_type_map[0]);
+    profile = fuzz_srtp_profiles[params.srtp_profile].profile;
 
     status = srtp_policy_create(&policy);
     if (status != srtp_err_status_ok || policy == NULL) {
         return NULL;
     }
 
-    fuzz_srtp_crypto_policies[params.srtp_crypto_policy_func]
-        .crypto_policy_func(&policy->rtp);
-    fuzz_srtp_crypto_policies[params.srtp_crypto_policy_func]
-        .crypto_policy_func(&policy->rtcp);
-
-    if (policy->rtp.cipher_key_len > MAX_KEY_LEN) {
-        /* Shouldn't happen */
-        abort();
+    status = srtp_policy_set_profile(policy, profile);
+    if (status != srtp_err_status_ok) {
+        srtp_policy_destroy(policy);
+        return NULL;
     }
 
-    /*
-     * The fuzzer sets crypto fields directly and still needs a non-reserved
-     * profile for policy validation.
-     */
-    policy->profile = srtp_profile_aes128_cm_sha1_80;
+    key_size = srtp_profile_get_master_key_length(profile);
+    salt_size = srtp_profile_get_master_salt_length(profile);
+    if (key_size + salt_size > SRTP_MAX_KEY_LEN) {
+        /* Shouldn't happen for a public profile. */
+        abort();
+    }
 
     status = srtp_policy_set_ssrc(
         policy, (srtp_ssrc_t){
@@ -379,9 +396,8 @@ static srtp_policy_t extract_policy(const uint8_t **data, size_t *size)
         return NULL;
     }
 
-    if ((params.do_extract_key % 2) == 0) {
-        if (!extract_and_add_key(policy, data, size,
-                                 policy->rtp.cipher_key_len)) {
+    if (profile != srtp_profile_null_null && (params.do_extract_key % 2) == 0) {
+        if (!extract_and_add_key(policy, data, size, key_size, salt_size)) {
             srtp_policy_destroy(policy);
             return NULL;
         }
@@ -397,13 +413,15 @@ static srtp_policy_t extract_policy(const uint8_t **data, size_t *size)
         if (copy_size > SRTP_MAX_NUM_ENC_HDR_XTND_IDS) {
             copy_size = SRTP_MAX_NUM_ENC_HDR_XTND_IDS;
         }
-        memcpy(policy->enc_xtn_hdr, *data, copy_size);
+        for (size_t i = 0; i < copy_size; i++) {
+            (void)srtp_policy_add_enc_hdr_xtnd_id(policy, (*data)[i]);
+        }
         *data += xtn_hdr_size;
         *size -= xtn_hdr_size;
-        policy->enc_xtn_hdr_count = copy_size;
     }
 
-    if ((params.do_extract_master_keys % 2) == 0) {
+    if (profile != srtp_profile_null_null &&
+        (params.do_extract_master_keys % 2) == 0) {
         while (1) {
             uint8_t do_extract_master_key;
             EXTRACT_IF(&do_extract_master_key, *data, *size,
@@ -413,8 +431,8 @@ static srtp_policy_t extract_policy(const uint8_t **data, size_t *size)
                 break;
             }
 
-            if (!extract_and_add_master_key(policy, data, size,
-                                            policy->rtp.cipher_key_len)) {
+            if (!extract_and_add_master_key(policy, data, size, key_size,
+                                            salt_size)) {
                 break;
             }
         }
