@@ -3473,6 +3473,7 @@ srtp_err_status_t srtp_test_missing_session_keys(void)
 
     free(packet);
     CHECK_OK(srtp_dealloc(srtp_receiver));
+    srtp_policy_destroy(policy);
 
     return srtp_err_status_ok;
 }
@@ -4578,6 +4579,7 @@ srtp_err_status_t srtp_test_short_packet_gcm_mki(void)
 
     free(packet);
     CHECK_OK(srtp_dealloc(srtp_receiver));
+    srtp_policy_destroy(policy);
 
     return srtp_err_status_ok;
 }
