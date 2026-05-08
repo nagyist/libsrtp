@@ -132,7 +132,7 @@ include_directories(${CONFIG_FILE_DIR})
 configure_file(config_in_cmake.h ${CONFIG_FILE_DIR}/config.h)
 add_definitions(-DHAVE_CONFIG_H)
 
-if(ENABLE_SANITIZE_ADDR OR ENABLE_SANITIZE_UNDEF)
+if(ENABLE_SANITIZE_ADDR OR ENABLE_SANITIZE_UNDEF OR ENABLE_SANITIZE_LEAK OR ENABLE_SANITIZE_THREAD)
     include(Sanitizer)
     add_sanitizer_flags()
 endif()

@@ -288,6 +288,7 @@ static srtp_err_status_t srtp_aes_icm_mbedtls_dealloc(srtp_cipher_t *c)
      */
     ctx = (srtp_aes_icm_ctx_t *)c->state;
     if (ctx != NULL) {
+        psa_cipher_abort(&(ctx->ctx->op));
         psa_destroy_key(ctx->ctx->key_id);
         srtp_crypto_free(ctx->ctx);
         /* zeroize the key material */
