@@ -1638,9 +1638,9 @@ static srtp_err_status_t srtp_stream_init(srtp_stream_ctx_t *srtp,
      * Let a window size of 0 imply the default value.
      */
 
-    if (p->window_size != 0 &&
-        (p->window_size < 64 || p->window_size >= 0x8000))
+    if (!srtp_policy_is_valid_window_size(p->window_size)) {
         return srtp_err_status_bad_param;
+    }
 
     if (p->window_size != 0) {
         err = srtp_rdbx_init(&srtp->rtp_rdbx, p->window_size);

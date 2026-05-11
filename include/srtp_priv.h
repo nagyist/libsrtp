@@ -124,6 +124,11 @@ static inline bool srtp_policy_is_null_cipher_null_auth(
            policy->rtcp.auth_type == SRTP_NULL_AUTH;
 }
 
+static inline bool srtp_policy_is_valid_window_size(size_t window_size)
+{
+    return window_size == 0 || (window_size >= 64 && window_size < 0x8000);
+}
+
 /*
  * the following declarations are libSRTP internal functions
  */

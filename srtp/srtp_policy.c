@@ -860,9 +860,7 @@ srtp_err_status_t srtp_policy_validate(srtp_policy_t policy)
         return srtp_err_status_bad_param;
     }
 
-    if (policy->ssrc.type != ssrc_any_inbound &&
-        policy->ssrc.type != ssrc_any_outbound &&
-        policy->ssrc.type != ssrc_specific) {
+    if (policy->ssrc.type == ssrc_undefined) {
         return srtp_err_status_bad_param;
     }
 
@@ -915,8 +913,7 @@ srtp_err_status_t srtp_policy_validate(srtp_policy_t policy)
         }
     }
 
-    if (policy->window_size != 0 &&
-        (policy->window_size < 64 || policy->window_size >= 0x8000)) {
+    if (!srtp_policy_is_valid_window_size(policy->window_size)) {
         return srtp_err_status_bad_param;
     }
 
@@ -1101,7 +1098,7 @@ srtp_err_status_t srtp_policy_set_window_size(srtp_policy_t policy,
         return srtp_err_status_bad_param;
     }
 
-    if (window_size != 0 && (window_size < 64 || window_size >= 0x8000)) {
+    if (!srtp_policy_is_valid_window_size(window_size)) {
         return srtp_err_status_bad_param;
     }
 
