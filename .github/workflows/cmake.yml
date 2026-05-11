@@ -124,7 +124,18 @@ jobs:
     - name: Configure CMake
       working-directory: ${{github.workspace}}/build
       shell: bash
-      run: cmake $GITHUB_WORKSPACE -DLIBSRTP_TEST_APPS=ON  ${{ matrix.cmake-crypto-enable}} ${{env.cmake-crypto-dir}}
+      run: |
+        sanitizer_flags=""
+        if [[ "${{ matrix.os }}" != "windows-latest" ]]; then
+          sanitizer_flags="-DENABLE_SANITIZE_ADDR=ON -DENABLE_SANITIZE_UNDEF=ON"
+        fi
+
+        cmake $GITHUB_WORKSPACE \
+          -DLIBSRTP_TEST_APPS=ON \
+          -DCMAKE_BUILD_TYPE=Debug \
+          $sanitizer_flags \
+          ${{ matrix.cmake-crypto-enable}} \
+          ${{env.cmake-crypto-dir}}
 
     - name: Build
       working-directory: ${{github.workspace}}/build

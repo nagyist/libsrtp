@@ -256,6 +256,7 @@ static srtp_err_status_t srtp_aes_gcm_mbedtls_dealloc(srtp_cipher_t *c)
     FUNC_ENTRY();
     ctx = (srtp_aes_gcm_ctx_t *)c->state;
     if (ctx) {
+        psa_aead_abort(&(ctx->ctx->op));
         psa_destroy_key(ctx->ctx->key_id);
         srtp_crypto_free(ctx->ctx);
         /* zeroize the key material */
@@ -455,7 +456,9 @@ static srtp_err_status_t srtp_aes_gcm_mbedtls_decrypt(void *cv,
     *dst_len = out_len;
     c->aad_size = 0;
     if (status != PSA_SUCCESS) {
+        debug_print(srtp_mod_aes_gcm, "mbedtls error code:  %d", status);
         return srtp_err_status_auth_fail;
     }
+
     return srtp_err_status_ok;
 }
